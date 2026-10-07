@@ -3,7 +3,6 @@ HeedX AI — Nigerian Mental Wellness Platform
 Two-Mode Mental-Health AI Architecture:
 - Mode A: Professional / Case Analysis (Qualitative Case Understanding + RAG + Clinical Formulation)
 - Mode B: Conversational User Mode (Multi-turn State Tracking + RAG + Safety-First Dialogue)
-- Research & Benchmark Hub: Classical 4-Class Machine Learning (SVM) for comparative research
 - Nigerian Resources Directory: Verified emergency, psychiatric, and community support
 """
 
@@ -17,11 +16,8 @@ import urllib.parse
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 
-import joblib
 import numpy as np
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 import pypdf
 import requests
 import streamlit as st
@@ -32,14 +28,11 @@ except ImportError:
     genai = None
 
 from config.settings import (
-    QUESTIONNAIRE, MENTAL_HEALTH_CLASSES,
-    RISK_THRESHOLDS, CONTACT_INFO,
+    CONTACT_INFO,
     NIGERIA_EMERGENCY_NUMBERS, MENTAL_HEALTH_SUPPORT,
     PROFESSIONAL_HELP, FAITH_COMMUNITY_SUPPORT,
     NIGERIAN_PROVERBS, CULTURAL_WELLNESS_TIPS, CRISIS_RESOURCES
 )
-from utils.preprocessing import clean_response, split_sentences, preprocess_text
-from utils.analysis import MentalHealthAnalyzer, create_distribution_dataframe
 from utils.recommendations import RecommendationEngine
 from utils.session_storage import SessionTracker
 from utils.qualitative_engine import QualitativeAnalysisEngine
@@ -225,24 +218,10 @@ def get_shared_core():
     return qualitative_engine, rag_engine, safety_layer, recommendation_engine
 
 
-@st.cache_resource
-def load_classical_svm_model():
-    """Loads the pre-trained Support Vector Machine model for research benchmarking"""
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    model_path = os.path.join(base_dir, "psychotherapy_svm_model.pkl")
-    if os.path.exists(model_path):
-        try:
-            return joblib.load(model_path)
-        except Exception as e:
-            st.error(f"Error loading classical ML model: {e}")
-            return None
-    return None
-
-
 def init_session_state():
     """Initializes session variables with clean state defaults"""
     defaults = {
-        'page': 'home',                  # 'home', 'mode_a', 'mode_b', 'research', 'resources'
+        'page': 'home',  # 'home', 'mode_a', 'mode_b', 'resources'
         'gemini_api_key': '',
         'case_text': '',
         'case_analysis': None,
@@ -252,9 +231,6 @@ def init_session_state():
         'chat_messages': [],
         'active_crisis_banner': None,
         'tracker': SessionTracker(),
-        'research_responses': {},
-        'research_results': None,
-        'research_analyzer': None,
         'uploader_id': 0,
     }
     for k, v in defaults.items():
@@ -395,10 +371,6 @@ def render_sidebar():
 
         if st.button("💬 Mode B: Conversational Support", use_container_width=True):
             st.session_state.page = 'mode_b'
-            st.rerun()
-
-        if st.button("🔬 Research & Model Benchmark", use_container_width=True):
-            st.session_state.page = 'research'
             st.rerun()
 
         if st.button("📍 Nigerian Support Resources", use_container_width=True):
@@ -727,19 +699,6 @@ Please generate the formal qualitative case formulation for the mental health pr
         else:
             st.info("API key required to generate full clinical case formulation. Please set your Gemini API key in the sidebar.")
 
-        # Optional Comparative Classical ML Check
-        with st.expander("🔬 Research Comparison: View Classical SVM Prediction for this Text"):
-            st.caption("This classical model is maintained strictly for comparative research benchmarking.")
-            model = load_classical_svm_model()
-            if model:
-                analyzer = MentalHealthAnalyzer(model, model.classes_)
-                preds = analyzer.analyze_response(st.session_state.case_text, "case")
-                st.write(f"Analyzed {len(preds)} sentences:")
-                for p in preds[:5]:
-                    st.markdown(f"- **{p['sentence']}** &rarr; `{p['prediction'].upper()}` (Confidence: {p['confidence']:.1%})")
-            else:
-                st.write("Classical model not loaded.")
-
 
 # ============================================
 # PAGE 3: MODE B — CONVERSATIONAL USER MODE
@@ -906,115 +865,7 @@ CURRENT CONVERSATION STATE:
 
 
 # ============================================
-# PAGE 4: RESEARCH & MODEL BENCHMARK HUB
-# ============================================
-def render_research_benchmark_page():
-    """
-    Houses the classical 4-class Support Vector Machine (SVM) model.
-    Maintained for comparative research, model validation, and experimental benchmarking.
-    """
-    st.markdown("<h2 class='sub-header'>🔬 Research & Model Benchmark Hub</h2>", unsafe_allow_html=True)
-    st.markdown(
-        "<p style='color:#4a5568;margin-top:-0.4rem;'>"
-        "Classical Machine Learning Model Evaluation & Sentence-Level Prediction Benchmark (Support Vector Machine)."
-        "</p>",
-        unsafe_allow_html=True
-    )
-
-    st.markdown("""
-    <div class='clinical-card'>
-        <strong>Architectural Notice:</strong><br>
-        In accordance with modern mental health AI safety standards, HeedX has migrated primary user and clinical interactions to qualitative semantic understanding (Mode A & Mode B).<br>
-        This benchmark environment is preserved for <strong>comparative academic research</strong>, testing classical TF-IDF + SVM classification performance, and evaluating explainable AI sentence markers.
-    </div>
-    """, unsafe_allow_html=True)
-
-    model = load_classical_svm_model()
-    if model is None:
-        st.error("The classical SVM model (`psychotherapy_svm_model.pkl`) could not be loaded.")
-        return
-
-    st.markdown("### Test Text Benchmark")
-    benchmark_input = st.text_area(
-        "Enter text to test sentence-by-sentence with the Linear SVM classifier",
-        height=140,
-        placeholder="e.g., I have been feeling anxious about my examinations. My heart races every morning. But I am hoping to get help."
-    )
-
-    if st.button("Run Classical SVM Benchmark", use_container_width=True):
-        if not benchmark_input.strip():
-            st.warning("Please provide text to benchmark.")
-            return
-
-        analyzer = MentalHealthAnalyzer(model, model.classes_)
-        cleaned = clean_response(benchmark_input)
-        sentence_results = analyzer.analyze_response(cleaned, "benchmark")
-
-        if not sentence_results:
-            st.warning("Could not segment sentences from the provided text.")
-            return
-
-        analyzer.sentence_predictions = sentence_results
-        aggregated = analyzer._aggregate_predictions()
-
-        st.session_state.research_results = aggregated
-        st.session_state.research_analyzer = analyzer
-
-        # Display Distribution & Visuals
-        st.markdown("### Aggregated Class Distribution (Research View)")
-        col_m1, col_m2 = st.columns([1, 1])
-
-        with col_m1:
-            st.markdown(f"**Primary Detected Indicator:** `{aggregated['primary_indicator'].upper()}` ({aggregated['primary_percentage']:.1f}%)")
-            if aggregated.get('secondary_indicator'):
-                st.markdown(f"**Secondary Indicator:** `{aggregated['secondary_indicator'].upper()}` ({aggregated['secondary_percentage']:.1f}%)")
-            st.markdown(f"**Computed Risk Level:** `{analyzer.get_risk_level().upper()}`")
-
-            # Pie Chart
-            dist = aggregated['distribution']
-            fig = px.pie(
-                values=list(dist.values()),
-                names=list(dist.keys()),
-                color=list(dist.keys()),
-                color_discrete_map={
-                    'normal': '#27ae60',
-                    'anxiety': '#e67e22',
-                    'depression': '#2980b9',
-                    'suicidal': '#c0392b'
-                },
-                hole=0.4
-            )
-            fig.update_layout(margin=dict(t=10, b=10, l=10, r=10), height=260)
-            st.plotly_chart(fig, use_container_width=True)
-
-        with col_m2:
-            st.markdown("### Sentence-Level Classifications")
-            COLOR_MAP = {
-                'suicidal':   ("#fff0f0", "Suicidal"),
-                'anxiety':    ("#fffbf0", "Anxiety"),
-                'depression': ("#f0f4ff", "Depression"),
-                'normal':     ("#f8f9fa", "Normal"),
-            }
-            for sent_result in sentence_results:
-                pred = sent_result.get('prediction', 'normal')
-                color, label = COLOR_MAP.get(pred, ("#f8f9fa", "Normal"))
-                safe_sent = html_lib.escape(sent_result.get('sentence', ''))
-                intensity = sent_result.get('intensity', 1.0)
-                markers = ", ".join(sent_result.get('markers', []))
-                marker_str = f" | Signals: {markers}" if markers else ""
-                conf_str = f"Confidence: {sent_result.get('confidence', 0):.1%} | Intensity: {intensity:.1f}x{marker_str}"
-
-                html_block = f"""
-                <div class='sentence-box' style='background-color:{color};border-left:4px solid #718096;padding:0.6rem;margin:0.3rem 0;'>
-                    <span style='color:#555;font-size:0.8rem;'>{label} &mdash; {conf_str}</span><br>
-                    <span>{safe_sent}</span>
-                </div>
-                """
-                st.markdown(html_block, unsafe_allow_html=True)
-
-
-# ============================================
-# PAGE 5: NIGERIAN RESOURCES DIRECTORY
+# PAGE 4: NIGERIAN RESOURCES DIRECTORY
 # ============================================
 def render_resources_page():
     """Comprehensive, deterministic directory of verified Nigerian mental health resources"""
@@ -1087,8 +938,7 @@ def main():
     # Development Notice
     st.info(
         "🛡️ **HeedX AI 2.0**: Redesigned around the Two-Mode Architecture — "
-        "**Mode A (Professional Case Analysis)** and **Mode B (Conversational Support)** with a shared RAG and safety layer. "
-        "Classical SVM is preserved in the Research Hub."
+        "**Mode A (Professional Case Analysis)** and **Mode B (Conversational Support)** with a shared RAG and safety layer."
     )
 
     # Render Persistent Sidebar
@@ -1103,8 +953,6 @@ def main():
         render_mode_a_page(qa_engine, rag_engine, safety_layer)
     elif current_page == 'mode_b':
         render_mode_b_page(qa_engine, rag_engine, safety_layer, rec_engine)
-    elif current_page == 'research':
-        render_research_benchmark_page()
     elif current_page == 'resources':
         render_resources_page()
     else:
