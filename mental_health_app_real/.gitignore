@@ -1,0 +1,17 @@
+.streamlit/secrets.toml
+.streamlit/secrets.local.toml
+*.pyc
+__pycache__/
+.DS_Store
+*.egg-info/
+dist/
+build/
+.env
+.venv
+venv/
+*.pkl
+*.joblib
+data/user_history/*
+!data/user_history/.gitkeep
+.pytest_cache/
+.coverage
