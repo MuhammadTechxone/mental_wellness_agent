@@ -1,10 +1,12 @@
 """
-MindMirror AI - Nigerian Indigenous Context Configuration
-Culturally adapted mental wellness companion with local support resources
+HeedX AI configuration.
+
+Production architecture is qualitative analysis + RAG + safety.
+Legacy classifier and questionnaire settings are intentionally disabled
+so the system stays aligned with the migration plan.
 """
 
 import os
-from datetime import datetime
 
 # ============================================
 # APP INFORMATION
@@ -14,16 +16,12 @@ APP_TAGLINE = "Your Nigerian Mental Wellness Companion"
 APP_VERSION = "2.0.0"
 
 # ============================================
-# MENTAL HEALTH CLASSIFICATIONS
+# LEGACY CLASSIFICATION SETTINGS
 # ============================================
-MENTAL_HEALTH_CLASSES = ['anxiety', 'depression', 'suicidal', 'normal']
-
-# Risk thresholds (Nigerian context adapted)
-RISK_THRESHOLDS = {
-    'suicidal_high_risk': 20,
-    'suicidal_moderate': 10,
-    'depression_anxiety_threshold': 40
-}
+# These are intentionally left empty because the production system no
+# longer depends on a four-class ML diagnostic model.
+MENTAL_HEALTH_CLASSES = []
+RISK_THRESHOLDS = {}
 
 # ============================================
 # USER DATA STORAGE
@@ -37,8 +35,8 @@ os.makedirs(USER_DATA_DIR, exist_ok=True)
 CONTACT_INFO = {
     'whatsapp': '08132128646',
     'email': 'technicalxone@gmail.com',
-    'support_email': 'support@heedx.com',   
-    'platform_whatsapp': '08132128646',  
+    'support_email': 'support@heedx.com',
+    'platform_whatsapp': '08132128646',
     'whatsapp_link': 'https://wa.me/2348132128646',
     'instagram': '@heedx_ng',
     'twitter': '@heedx_ng'
@@ -211,15 +209,11 @@ NIGERIAN_PROVERBS = [
 ]
 
 # ============================================
-# QUESTIONNAIRE (Nigerian Context)
+# LEGACY SCREENING / QUESTIONNAIRE
 # ============================================
-QUESTIONNAIRE = [
-    {
-        'id': 'narration',
-        'question': "📝 Wellness Narration & Case Observation",
-        'placeholder': "Share your story or paste a professional observation here. To get the best analysis, try to include details about: \n- Recent emotional state and mood\n- Current worries or stressors (work, family, health)\n- Sleep patterns and physical energy levels\n- Social connections and community support\n- Your outlook on the future..."
-    }
-]
+# The production system intentionally does not use PHQ-9/GAD-7-style
+# screening. This list remains empty to avoid accidental reintroduction.
+QUESTIONNAIRE = []
 
 # ============================================
 # RECOMMENDATIONS (Nigerian Context)
@@ -241,3 +235,4 @@ SUPPORT_RESOURCES = {
     'faith_community': FAITH_COMMUNITY_SUPPORT,
     'proverbs': NIGERIAN_PROVERBS
 }
+
